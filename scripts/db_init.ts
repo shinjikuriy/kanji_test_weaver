@@ -8,7 +8,7 @@ for await (const answer of console) {
     break
   } else {
     console.log('Operation was canceled.')
-    process.exit(0)
+    process.exit()
   } }
 
 // delete the database file if it exists
@@ -29,7 +29,8 @@ const queries = [
     kanji (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       character TEXT NOT NULL UNIQUE,
-      chapter INTEGER
+      chapter INTEGER,
+      textbook_id INTEGER
     );
   `,
   `
@@ -37,7 +38,8 @@ const queries = [
     words (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       word TEXT NOT NULL UNIQUE,
-      chapter INTEGER
+      chapter INTEGER,
+      textbook_id INTEGER
     );
   `,
   `
@@ -45,7 +47,8 @@ const queries = [
     sentences (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       sentence TEXT NOT NULL UNIQUE,
-      chapter INTEGER
+      chapter INTEGER,
+      textbook_id INTEGER
     );
   `,
   `
@@ -53,7 +56,6 @@ const queries = [
     textbooks (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       title TEXT NOT NULL UNIQUE,
-      chapter INTEGER
     );
   `,
   `
