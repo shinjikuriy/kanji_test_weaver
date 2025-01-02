@@ -29,8 +29,8 @@ const queries = [
     kanji (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       character TEXT NOT NULL UNIQUE,
-      chapter INTEGER,
-      textbook_id INTEGER
+      chapter INTEGER NOT NULL,
+      textbook_id INTEGER NOT NULL
     );
   `,
   `
@@ -38,8 +38,8 @@ const queries = [
     words (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       word TEXT NOT NULL UNIQUE,
-      chapter INTEGER,
-      textbook_id INTEGER
+      chapter INTEGER NOT NULL,
+      textbook_id INTEGER NOT NULL
     );
   `,
   `
@@ -47,15 +47,15 @@ const queries = [
     sentences (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       sentence TEXT NOT NULL UNIQUE,
-      chapter INTEGER,
-      textbook_id INTEGER
+      chapter INTEGER NOT NULL,
+      textbook_id INTEGER NOT NULL
     );
   `,
   `
   CREATE TABLE IF NOT EXISTS
     textbooks (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      title TEXT NOT NULL UNIQUE,
+      title TEXT NOT NULL UNIQUE
     );
   `,
   `
