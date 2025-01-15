@@ -1,8 +1,13 @@
-import { Textbook } from '@types'
+import { Kanji, Sentence, Textbook, Word } from '@types'
 import { render } from 'hono/jsx/dom'
 import { useState } from 'hono/jsx/dom'
 
 function App() {
+  const [selected, setSelected] = useState<{
+    textbook?: Textbook
+    chapter?: number
+  }>({})
+
   const [textbooks, setTextbooks] = useState<Textbook[]>([])
   const fetchTextbooks = async () => {
     const response = await fetch('/api/textbooks')
@@ -11,6 +16,7 @@ function App() {
     }
     const textbooks = await response.json()
     setTextbooks(textbooks)
+    setSelected({})
   }
 
   const [chapters, setChapters] = useState<number[]>([])
@@ -23,6 +29,42 @@ function App() {
     setChapters(chapters.map((chapter: { chapter: number }) => chapter.chapter))
   }
 
+  const [kanji, setKanji] = useState<Kanji[]>([])
+  const fetchKanji = async (textbookId: number, chapter: number) => {
+    const response = await fetch(
+      `/api/textbooks/${textbookId}/chapters/${chapter}/kanji`
+    )
+    if (!response.ok) {
+      throw new Error('Failed to fetch kanji')
+    }
+    const kanji = await response.json()
+    setKanji(kanji)
+  }
+
+  const [words, setWords] = useState<Word[]>([])
+  const fetchWords = async (textbookId: number, chapter: number) => {
+    const response = await fetch(
+      `/api/textbooks/${textbookId}/chapters/${chapter}/words`
+    )
+    if (!response.ok) {
+      throw new Error('Failed to fetch words')
+    }
+    const words = await response.json()
+    setWords(words)
+  }
+
+  const [sentences, setSentences] = useState<Sentence[]>([])
+  const fetchSentences = async (textbookId: number, chapter: number) => {
+    const response = await fetch(
+      `/api/textbooks/${textbookId}/chapters/${chapter}/sentences`
+    )
+    if (!response.ok) {
+      throw new Error('Failed to fetch sentences')
+    }
+    const sentences = await response.json()
+    setSentences(sentences)
+  }
+
   return (
     <>
       <div>
@@ -30,29 +72,70 @@ function App() {
         <button onClick={fetchTextbooks}>show textbooks</button>
       </div>
       {textbooks.length > 0 && (
-      <div>
-        <h2>Textbooks</h2>
         <div>
-          {textbooks.map((textbook) => (
-            <button
-              key={textbook.id}
-              onClick={() => fetchChapters(textbook.id)}
-            >
-              {textbook.title}
-            </button>
-          ))}
-        </div>
-      </div>
-      )}
-      {chapters.length > 0 && (
-        <div>
-          <h2>Chapters</h2>
+          <h2>Textbooks</h2>
           <div>
-            {chapters.map((chapter) => (
-              <button key={chapter}>{chapter}</button>
+            {textbooks.map((textbook) => (
+              <button
+                key={textbook.id}
+                onClick={() => {
+                  fetchChapters(textbook.id)
+                  setSelected({ textbook })
+                }}
+              >
+                {textbook.title}
+              </button>
             ))}
           </div>
         </div>
+      )}
+
+      {selected.textbook && (
+        <div>
+          <h2>Chapters in {selected.textbook.title}</h2>
+          <div>
+            {chapters.map((chapter) => (
+              <button
+                key={chapter}
+                onClick={() => {
+                  if (selected.textbook) {
+                    fetchKanji(selected.textbook.id, chapter)
+                    fetchWords(selected.textbook.id, chapter)
+                    fetchSentences(selected.textbook.id, chapter)
+                    setSelected(({ textbook }) => ({ textbook, chapter }))
+                  }
+                }}
+              >
+                {chapter}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {selected.chapter && (
+        <>
+          <div>
+            <h2>Kanji</h2>
+            <p>{kanji.map((k) => k.character).join(', ')}</p>
+          </div>
+          <div>
+            <h2>Words</h2>
+            <div>
+              {words.map((word) => (
+                <button key={word.id}>{word.word}</button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <h2>Sentences</h2>
+            <div>
+              {sentences.map((s) => (
+                <button key={s.id}>{s.sentence}</button>
+              ))}
+            </div>
+          </div>
+        </>
       )}
     </>
   )
