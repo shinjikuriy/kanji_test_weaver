@@ -30,38 +30,19 @@ function App() {
   }
 
   const [kanji, setKanji] = useState<Kanji[]>([])
-  const fetchKanji = async (textbookId: number, chapter: number) => {
-    const response = await fetch(
-      `/api/textbooks/${textbookId}/chapters/${chapter}/kanji`
-    )
-    if (!response.ok) {
-      throw new Error('Failed to fetch kanji')
-    }
-    const kanji = await response.json()
-    setKanji(kanji)
-  }
-
   const [words, setWords] = useState<Word[]>([])
-  const fetchWords = async (textbookId: number, chapter: number) => {
-    const response = await fetch(
-      `/api/textbooks/${textbookId}/chapters/${chapter}/words`
-    )
-    if (!response.ok) {
-      throw new Error('Failed to fetch words')
-    }
-    const words = await response.json()
-    setWords(words)
-  }
-
   const [sentences, setSentences] = useState<Sentence[]>([])
-  const fetchSentences = async (textbookId: number, chapter: number) => {
+
+  const fetchChapterContents = async (textbookId: number, chapter: number) => {
     const response = await fetch(
-      `/api/textbooks/${textbookId}/chapters/${chapter}/sentences`
+      `/api/textbooks/${textbookId}/chapters/${chapter}/contents`
     )
     if (!response.ok) {
-      throw new Error('Failed to fetch sentences')
+      throw new Error('Failed to fetch chapter contents')
     }
-    const sentences = await response.json()
+    const { kanji, words, sentences } = await response.json()
+    setKanji(kanji)
+    setWords(words)
     setSentences(sentences)
   }
 
@@ -99,9 +80,7 @@ function App() {
                 key={chapter}
                 onClick={() => {
                   if (selected.textbook) {
-                    fetchKanji(selected.textbook.id, chapter)
-                    fetchWords(selected.textbook.id, chapter)
-                    fetchSentences(selected.textbook.id, chapter)
+                    fetchChapterContents(selected.textbook.id, chapter)
                     setSelected(({ textbook }) => ({ textbook, chapter }))
                   }
                 }}

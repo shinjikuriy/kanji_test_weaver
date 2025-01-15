@@ -83,4 +83,20 @@ app.get('/api/textbooks/:textbookId/chapters/:chapter/sentences', (c) => {
   return c.json(sentences)
 })
 
+app.get('/api/textbooks/:textbookId/chapters/:chapter/contents', (c) => {
+  const { textbookId, chapter } = c.req.param()
+
+  // check if textbookId and chapter are integers
+  if (!Number.isInteger(Number(textbookId)) || !Number.isInteger(Number(chapter))) {
+    c.status(400)
+    return c.json({ error: 'textbookId and chapter must be integers' })
+  }
+
+  const kanji = dao.selectKanjiByChapter.all({ textbookId: Number(textbookId), chapter: Number(chapter) })
+  const words = dao.selectWordsByChapter.all({ textbookId: Number(textbookId), chapter: Number(chapter) })
+  const sentences = dao.selectSentencesByChapter.all({ textbookId: Number(textbookId), chapter: Number(chapter) })
+
+  return c.json({ kanji, words, sentences })
+})
+
 export default app
