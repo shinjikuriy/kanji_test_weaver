@@ -26,7 +26,7 @@ const db = new Database('db/db.sqlite', { create: true, strict: true })
 const queries = [
   `
   CREATE TABLE IF NOT EXISTS
-    kanji (
+    kanjis (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       character TEXT NOT NULL UNIQUE,
       chapter INTEGER NOT NULL,
@@ -60,7 +60,7 @@ const queries = [
   `,
   `
   CREATE TABLE IF NOT EXISTS
-    kanji_words (
+    kanjis_words (
       kanji_id INTEGER NOT NULL,
       word_id INTEGER NOT NULL,
       PRIMARY KEY (kanji_id, word_id),
@@ -70,7 +70,7 @@ const queries = [
   `,
   `
   CREATE TABLE IF NOT EXISTS
-    kanji_sentences (
+    kanjis_sentences (
       kanji_id INTEGER NOT NULL,
       sentence_id INTEGER NOT NULL,
       PRIMARY KEY (kanji_id, sentence_id),

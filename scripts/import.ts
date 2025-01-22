@@ -4,7 +4,7 @@ import { DatabaseSchema } from '@types'
 
 const db = new Database('db/db.sqlite', { create: false, strict: true })
 
-const kanji = parse(await Bun.file('csv/kanji.csv').text(), {
+const kanjis = parse(await Bun.file('csv/kanji.csv').text(), {
   columns: true,
   skip_empty_lines: true,
   cast: (value, context) => {
@@ -42,7 +42,7 @@ const sentences = parse(await Bun.file('csv/sentences.csv').text(), {
 })
 
 // insert kanji data into the database
-for (const row of kanji) {
+for (const row of kanjis) {
   if (!row.character) throw new Error('character column is required')
   if (!row.textbook) throw new Error('textbook column is required')
 
@@ -58,7 +58,7 @@ for (const row of kanji) {
       .run(title).lastInsertRowid
   }
   db.prepare(
-    'INSERT INTO kanji (character, chapter, textbook_id) VALUES (?, ?, ?) ON CONFLICT (character) DO NOTHING;'
+    'INSERT INTO kanjis (character, chapter, textbook_id) VALUES (?, ?, ?) ON CONFLICT (character) DO NOTHING;'
   ).run(row.character, row.chapter, textbook_id)
 }
 
@@ -98,14 +98,14 @@ for (const row of sentences) {
 
 // prepare join tables
 const allKanji = db
-  .prepare(`select * from kanji order by textbook_id asc, chapter asc`)
+  .prepare(`select * from kanjis order by textbook_id asc, chapter asc`)
   .all()
 const allWords = db
   .prepare(`select * from words order by textbook_id asc, chapter asc`)
   .all()
 const allSentences = db.prepare(`select * from sentences`).all()
 
-// insert kanji_words data into the database
+// insert kanjis_words data into the database
 for (const kanji of allKanji as DatabaseSchema['kanji'][]) {
   for (const word of allWords as DatabaseSchema['words'][]) {
     if (
@@ -116,13 +116,13 @@ for (const kanji of allKanji as DatabaseSchema['kanji'][]) {
 
     if (word.word.includes(kanji.character)) {
       db.prepare(
-        'INSERT INTO kanji_words (kanji_id, word_id) VALUES (?, ?) ON CONFLICT (kanji_id, word_id) DO NOTHING;'
+        'INSERT INTO kanjis_words (kanji_id, word_id) VALUES (?, ?) ON CONFLICT (kanji_id, word_id) DO NOTHING;'
       ).run(kanji.id, word.id)
     }
   }
 }
 
-// insert kanji_sentences data into the database
+// insert kanjis_sentences data into the database
 for (const kanji of allKanji as DatabaseSchema['kanji'][]) {
   for (const sentence of allSentences as DatabaseSchema['sentences'][]) {
     if (
@@ -133,7 +133,7 @@ for (const kanji of allKanji as DatabaseSchema['kanji'][]) {
 
     if (sentence.sentence.includes(kanji.character)) {
       db.prepare(
-        'INSERT INTO kanji_sentences (kanji_id, sentence_id) VALUES (?, ?) ON CONFLICT (kanji_id, sentence_id) DO NOTHING;'
+        'INSERT INTO kanjis_sentences (kanji_id, sentence_id) VALUES (?, ?) ON CONFLICT (kanji_id, sentence_id) DO NOTHING;'
       ).run(kanji.id, sentence.id)
     }
   }

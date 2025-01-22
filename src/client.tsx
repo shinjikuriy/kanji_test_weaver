@@ -29,7 +29,7 @@ function App() {
     setChapters(chapters.map((chapter: { chapter: number }) => chapter.chapter))
   }
 
-  const [kanji, setKanji] = useState<Kanji[]>([])
+  const [kanjis, setKanjis] = useState<Kanji[]>([])
   const [words, setWords] = useState<Word[]>([])
   const [sentences, setSentences] = useState<Sentence[]>([])
 
@@ -40,8 +40,8 @@ function App() {
     if (!response.ok) {
       throw new Error('Failed to fetch chapter contents')
     }
-    const { kanji, words, sentences } = await response.json()
-    setKanji(kanji)
+    const { kanjis, words, sentences } = await response.json()
+    setKanjis(kanjis)
     setWords(words)
     setSentences(sentences)
   }
@@ -95,11 +95,11 @@ function App() {
       {selected.chapter && (
         <>
           <div>
-            <h2>Kanji</h2>
-            <p>{kanji.map((k) => k.character).join(', ')}</p>
+            <h2>Kanji in chapter {selected.chapter}</h2>
+            <p>{kanjis.map((k) => k.character).join(', ')}</p>
           </div>
           <div>
-            <h2>Words</h2>
+            <h2>Words in chapter {selected.chapter}</h2>
             <div>
               {words.map((word) => (
                 <button key={word.id}>{word.word}</button>
@@ -107,7 +107,7 @@ function App() {
             </div>
           </div>
           <div>
-            <h2>Sentences</h2>
+            <h2>Sentences in chapter {selected.chapter}</h2>
             <div>
               {sentences.map((s) => (
                 <button key={s.id}>{s.sentence}</button>

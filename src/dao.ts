@@ -2,28 +2,28 @@ import { Database } from 'bun:sqlite'
 
 const db = new Database('db/db.sqlite', { create: false, strict: true })
 
-export const selectKanjiByCharacter = db.prepare(`
+export const selectKanjisByCharacter = db.prepare(`
   select
-    kanji.id, kanji.character, textbooks.title, kanji.chapter
-    from kanji
-    join textbooks on kanji.textbook_id = textbooks.id
-  where kanji.character = $character;
+    kanjis.id, kanjis.character, textbooks.title, kanjis.chapter
+    from kanjis
+    join textbooks on kanjis.textbook_id = textbooks.id
+  where kanjis.character = $character;
   `)
 
-export const selectKanjiByChapter = db.prepare(`
+export const selectKanjisByChapter = db.prepare(`
   select
-    kanji.id, kanji.character, textbooks.title, kanji.chapter
-    from kanji
-    join textbooks on kanji.textbook_id = textbooks.id
-  where kanji.textbook_id = $textbookId
-    and kanji.chapter = $chapter
-  order by kanji.id;
+    kanjis.id, kanjis.character, textbooks.title, kanjis.chapter
+    from kanjis
+    join textbooks on kanjis.textbook_id = textbooks.id
+  where kanjis.textbook_id = $textbookId
+    and kanjis.chapter = $chapter
+  order by kanjis.id;
   `)
 
 export const selectWordsByKanjiId = db.prepare(`
   select words.id, words.word, textbooks.title, words.chapter
     from words
-    join kanji_words kw on words.id = kw.word_id
+    join kanjis_words kw on words.id = kw.word_id
     join textbooks on words.textbook_id = textbooks.id
   where kw.kanji_id = $kanjiId
   order by words.id;
@@ -42,7 +42,7 @@ export const selectWordsByChapter = db.prepare(`
 export const selectSentencesByKanjiId = db.prepare(`
   select sentences.id, sentences.sentence, textbooks.title, sentences.chapter
     from sentences
-    JOIN kanji_sentences ks on sentences.id = ks.sentence_id
+    JOIN kanjis_sentences ks on sentences.id = ks.sentence_id
     JOIN textbooks on sentences.textbook_id = textbooks.id
   where ks.kanji_id = $kanjiId
   order by sentences.id;
@@ -63,5 +63,5 @@ export const selectTextbooks = db.prepare(`
   `)
 
 export const selectChaptersByTextbookId = db.prepare(`
-  select distinct kanji.chapter from kanji where textbook_id = $textbookId order by kanji.chapter;
+  select distinct kanjis.chapter from kanjis where textbook_id = $textbookId order by kanjis.chapter;
   `)
