@@ -1,6 +1,15 @@
 import { Kanji, Sentence, Textbook, Word } from '@types'
 import { render } from 'hono/jsx/dom'
 import { useState } from 'hono/jsx/dom'
+import { Style } from 'hono/jsx/dom/css'
+
+interface SelectableWord extends Word {
+  selected: boolean
+}
+
+interface SelectableSentence extends Sentence {
+  selected: boolean
+}
 
 function App() {
   const [selected, setSelected] = useState<{
@@ -27,11 +36,13 @@ function App() {
     }
     const chapters = await response.json()
     setChapters(chapters.map((chapter: { chapter: number }) => chapter.chapter))
+    setWords([])
+    setSentences([])
   }
 
   const [kanjis, setKanjis] = useState<Kanji[]>([])
-  const [words, setWords] = useState<Word[]>([])
-  const [sentences, setSentences] = useState<Sentence[]>([])
+  const [words, setWords] = useState<SelectableWord[]>([])
+  const [sentences, setSentences] = useState<SelectableSentence[]>([])
 
   const fetchChapterContents = async (textbookId: number, chapter: number) => {
     const response = await fetch(
@@ -42,10 +53,25 @@ function App() {
     }
     const { kanjis, words, sentences } = await response.json()
     setKanjis(kanjis)
-    setWords(words)
-    setSentences(sentences)
+    setWords(words.map((w: Word) => ({ ...w, selected: false }) as SelectableWord))
+    setSentences(sentences.map((s: Sentence) => ({ ...s, selected: false}) as SelectableSentence))
   }
 
+  function handleToggleSelectedWord(word: SelectableWord) {
+    setWords(words => words.map(w => 
+      w.id === word.id 
+        ? { ...w, selected: !w.selected }
+        : w
+    ))
+  }
+
+  function handleToggleSelectedSentence(sentence: SelectableSentence) {
+    setSentences(sentences => sentences.map(s =>
+      s.id === sentence.id
+      ? { ...s, selected: !s.selected }
+      : s
+    ))
+  }
   return (
     <>
       <div>
@@ -102,7 +128,12 @@ function App() {
             <h2>Words in chapter {selected.chapter}</h2>
             <div>
               {words.map((word) => (
-                <button key={word.id}>{word.word}</button>
+                <button key={word.id}
+                  onClick={() => handleToggleSelectedWord(word)}
+                  style={word.selected ? { color: 'red' } : undefined}
+                >
+                  {word.word}
+                </button>
               ))}
             </div>
           </div>
@@ -110,7 +141,9 @@ function App() {
             <h2>Sentences in chapter {selected.chapter}</h2>
             <div>
               {sentences.map((s) => (
-                <button key={s.id}>{s.sentence}</button>
+                <button key={s.id}
+                onClick={() => handleToggleSelectedSentence(s)}
+                style={s.selected ? { color: 'red' } : undefined}>{s.sentence}</button>
               ))}
             </div>
           </div>
