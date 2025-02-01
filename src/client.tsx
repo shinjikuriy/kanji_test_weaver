@@ -1,7 +1,6 @@
 import { Kanji, Sentence, Textbook, Word } from '@types'
 import { render } from 'hono/jsx/dom'
 import { useState } from 'hono/jsx/dom'
-import { Style } from 'hono/jsx/dom/css'
 
 interface SelectableWord extends Word {
   selected: boolean
@@ -18,7 +17,7 @@ function App() {
   }>({})
 
   const [textbooks, setTextbooks] = useState<Textbook[]>([])
-  const fetchTextbooks = async () => {
+  const handleFetchTextbook = async () => {
     const response = await fetch('/api/textbooks')
     if (!response.ok) {
       throw new Error('Failed to fetch textbooks')
@@ -29,7 +28,7 @@ function App() {
   }
 
   const [chapters, setChapters] = useState<number[]>([])
-  const fetchChapters = async (textbookId: number) => {
+  const handleFetchChapters = async (textbookId: number) => {
     const response = await fetch(`/api/textbooks/${textbookId}/chapters`)
     if (!response.ok) {
       throw new Error('Failed to fetch chapters')
@@ -44,7 +43,10 @@ function App() {
   const [words, setWords] = useState<SelectableWord[]>([])
   const [sentences, setSentences] = useState<SelectableSentence[]>([])
 
-  const fetchChapterContents = async (textbookId: number, chapter: number) => {
+  const handleFetchChapterContents = async (
+    textbookId: number,
+    chapter: number
+  ) => {
     const response = await fetch(
       `/api/textbooks/${textbookId}/chapters/${chapter}/contents`
     )
@@ -53,30 +55,34 @@ function App() {
     }
     const { kanjis, words, sentences } = await response.json()
     setKanjis(kanjis)
-    setWords(words.map((w: Word) => ({ ...w, selected: false }) as SelectableWord))
-    setSentences(sentences.map((s: Sentence) => ({ ...s, selected: false}) as SelectableSentence))
+    setWords(
+      words.map((w: Word) => ({ ...w, selected: false } as SelectableWord))
+    )
+    setSentences(
+      sentences.map(
+        (s: Sentence) => ({ ...s, selected: false } as SelectableSentence)
+      )
+    )
   }
 
   function handleToggleSelectedWord(word: SelectableWord) {
-    setWords(words => words.map(w => 
-      w.id === word.id 
-        ? { ...w, selected: !w.selected }
-        : w
-    ))
+    setWords((words) =>
+      words.map((w) => (w.id === word.id ? { ...w, selected: !w.selected } : w))
+    )
   }
 
   function handleToggleSelectedSentence(sentence: SelectableSentence) {
-    setSentences(sentences => sentences.map(s =>
-      s.id === sentence.id
-      ? { ...s, selected: !s.selected }
-      : s
-    ))
+    setSentences((sentences) =>
+      sentences.map((s) =>
+        s.id === sentence.id ? { ...s, selected: !s.selected } : s
+      )
+    )
   }
   return (
     <>
       <div>
         <h1>Hello, World!</h1>
-        <button onClick={fetchTextbooks}>show textbooks</button>
+        <button onClick={handleFetchTextbook}>show textbooks</button>
       </div>
       {textbooks.length > 0 && (
         <div>
@@ -86,7 +92,7 @@ function App() {
               <button
                 key={textbook.id}
                 onClick={() => {
-                  fetchChapters(textbook.id)
+                  handleFetchChapters(textbook.id)
                   setSelected({ textbook })
                 }}
               >
@@ -106,7 +112,7 @@ function App() {
                 key={chapter}
                 onClick={() => {
                   if (selected.textbook) {
-                    fetchChapterContents(selected.textbook.id, chapter)
+                    handleFetchChapterContents(selected.textbook.id, chapter)
                     setSelected(({ textbook }) => ({ textbook, chapter }))
                   }
                 }}
@@ -128,7 +134,8 @@ function App() {
             <h2>Words in chapter {selected.chapter}</h2>
             <div>
               {words.map((word) => (
-                <button key={word.id}
+                <button
+                  key={word.id}
                   onClick={() => handleToggleSelectedWord(word)}
                   style={word.selected ? { color: 'red' } : undefined}
                 >
@@ -141,9 +148,13 @@ function App() {
             <h2>Sentences in chapter {selected.chapter}</h2>
             <div>
               {sentences.map((s) => (
-                <button key={s.id}
-                onClick={() => handleToggleSelectedSentence(s)}
-                style={s.selected ? { color: 'red' } : undefined}>{s.sentence}</button>
+                <button
+                  key={s.id}
+                  onClick={() => handleToggleSelectedSentence(s)}
+                  style={s.selected ? { color: 'red' } : undefined}
+                >
+                  {s.sentence}
+                </button>
               ))}
             </div>
           </div>
