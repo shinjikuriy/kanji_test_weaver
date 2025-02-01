@@ -1,13 +1,19 @@
 import { Kanji, Sentence, Textbook, Word } from '@types'
 import { render } from 'hono/jsx/dom'
-import { useState } from 'hono/jsx/dom'
+import { useState, useCallback } from 'hono/jsx/dom'
+
+interface SelectableKanji extends Kanji {
+  selected: boolean
+}
 
 interface SelectableWord extends Word {
   selected: boolean
+  disabled: boolean
 }
 
 interface SelectableSentence extends Sentence {
   selected: boolean
+  disabled: boolean
 }
 
 function App() {
@@ -39,7 +45,7 @@ function App() {
     setSentences([])
   }
 
-  const [kanjis, setKanjis] = useState<Kanji[]>([])
+  const [kanjis, setKanjis] = useState<SelectableKanji[]>([])
   const [words, setWords] = useState<SelectableWord[]>([])
   const [sentences, setSentences] = useState<SelectableSentence[]>([])
 
@@ -54,7 +60,9 @@ function App() {
       throw new Error('Failed to fetch chapter contents')
     }
     const { kanjis, words, sentences } = await response.json()
-    setKanjis(kanjis)
+    setKanjis(
+      kanjis.map((k: Kanji) => ({ ...k, selected: false } as SelectableKanji))
+    )
     setWords(
       words.map((w: Word) => ({ ...w, selected: false } as SelectableWord))
     )
@@ -65,11 +73,41 @@ function App() {
     )
   }
 
-  function handleToggleSelectedWord(word: SelectableWord) {
-    setWords((words) =>
-      words.map((w) => (w.id === word.id ? { ...w, selected: !w.selected } : w))
-    )
-  }
+  const handleWordSelection = useCallback((word: SelectableWord) => {
+    setWords(prev => prev.map(w => 
+      w.id === word.id ? { ...w, selected: !w.selected } : w
+    ));
+  
+    const updatedWords = words.map(w => 
+      w.id === word.id ? { ...w, selected: !w.selected } : w
+    );
+  
+    const updatedKanjis = kanjis.map(kanji => ({
+      ...kanji,
+      selected: updatedWords.some(w => w.selected && w.word.includes(kanji.character)) ||
+                sentences.some(s => s.selected && s.sentence.includes(kanji.character))
+    }));
+  
+    setKanjis(updatedKanjis);
+  }, [words, kanjis, sentences]);
+
+  const handleSentenceSelection = useCallback((sentence: SelectableSentence) => {
+    setSentences(prev => prev.map(s => 
+      s.id === sentence.id ? { ...s, selected: !s.selected } : s
+    ));
+  
+    const updatedSentences = sentences.map(s => 
+      s.id === sentence.id ? { ...s, selected: !s.selected } : s
+    );
+  
+    const updatedKanjis = kanjis.map(kanji => ({
+      ...kanji,
+      selected: words.some(w => w.selected && w.word.includes(kanji.character)) ||
+                updatedSentences.some(s => s.selected && s.sentence.includes(kanji.character))
+    }));
+  
+    setKanjis(updatedKanjis);
+  }, [words, kanjis, sentences]);
 
   function handleToggleSelectedSentence(sentence: SelectableSentence) {
     setSentences((sentences) =>
@@ -78,6 +116,34 @@ function App() {
       )
     )
   }
+
+  function handleUpdateChapterContents() {
+    const getSelectedItems = <T extends { selected: boolean }>(items: T[]) =>
+      items.filter((item) => item.selected)
+
+    const isKanjiIncluded = (character: string, text: string) =>
+      text.includes(character)
+
+    const isKanjiInSelectedItems = (character: string) => {
+      const selectedWords = getSelectedItems(words)
+      const selectedSentences = getSelectedItems(sentences)
+
+      return (
+        selectedWords.some((word) => isKanjiIncluded(character, word.word)) ||
+        selectedSentences.some((sentence) =>
+          isKanjiIncluded(character, sentence.sentence)
+        )
+      )
+    }
+
+    setKanjis(
+      kanjis.map((kanji) => ({
+        ...kanji,
+        selected: isKanjiInSelectedItems(kanji.character),
+      }))
+    )
+  }
+
   return (
     <>
       <div>
@@ -128,7 +194,22 @@ function App() {
         <>
           <div>
             <h2>Kanji in chapter {selected.chapter}</h2>
-            <p>{kanjis.map((k) => k.character).join(', ')}</p>
+            <p>
+              {kanjis
+                .map((k) => (
+                  <span
+                    key={k.character}
+                    style={k.selected ? { color: 'red' } : undefined}
+                  >
+                    {k.character}
+                  </span>
+                ))
+                .reduce((prev, curr) => (
+                  <>
+                    {prev}, {curr}
+                  </>
+                ))}
+            </p>
           </div>
           <div>
             <h2>Words in chapter {selected.chapter}</h2>
@@ -136,7 +217,7 @@ function App() {
               {words.map((word) => (
                 <button
                   key={word.id}
-                  onClick={() => handleToggleSelectedWord(word)}
+                  onClick={() => handleWordSelection(word)}
                   style={word.selected ? { color: 'red' } : undefined}
                 >
                   {word.word}
@@ -150,7 +231,7 @@ function App() {
               {sentences.map((s) => (
                 <button
                   key={s.id}
-                  onClick={() => handleToggleSelectedSentence(s)}
+                  onClick={() => handleSentenceSelection(s)}
                   style={s.selected ? { color: 'red' } : undefined}
                 >
                   {s.sentence}
