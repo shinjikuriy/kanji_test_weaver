@@ -1,6 +1,6 @@
 import { Kanji, Sentence, Textbook, Word } from '@types'
 import { render } from 'hono/jsx/dom'
-import { useState, useCallback } from 'hono/jsx/dom'
+import { useState } from 'hono/jsx/dom'
 
 interface SelectableKanji extends Kanji {
   selected: boolean
@@ -73,41 +73,51 @@ function App() {
     )
   }
 
-  const handleWordSelection = useCallback((word: SelectableWord) => {
-    setWords(prev => prev.map(w => 
-      w.id === word.id ? { ...w, selected: !w.selected } : w
-    ));
-  
-    const updatedWords = words.map(w => 
-      w.id === word.id ? { ...w, selected: !w.selected } : w
-    );
-  
-    const updatedKanjis = kanjis.map(kanji => ({
-      ...kanji,
-      selected: updatedWords.some(w => w.selected && w.word.includes(kanji.character)) ||
-                sentences.some(s => s.selected && s.sentence.includes(kanji.character))
-    }));
-  
-    setKanjis(updatedKanjis);
-  }, [words, kanjis, sentences]);
+  const handleWordSelection = (word: SelectableWord) => {
+    setWords((prev) =>
+      prev.map((w) => (w.id === word.id ? { ...w, selected: !w.selected } : w))
+    )
 
-  const handleSentenceSelection = useCallback((sentence: SelectableSentence) => {
-    setSentences(prev => prev.map(s => 
-      s.id === sentence.id ? { ...s, selected: !s.selected } : s
-    ));
-  
-    const updatedSentences = sentences.map(s => 
-      s.id === sentence.id ? { ...s, selected: !s.selected } : s
-    );
-  
-    const updatedKanjis = kanjis.map(kanji => ({
+    const updatedWords = words.map((w) =>
+      w.id === word.id ? { ...w, selected: !w.selected } : w
+    )
+
+    const updatedKanjis = kanjis.map((kanji) => ({
       ...kanji,
-      selected: words.some(w => w.selected && w.word.includes(kanji.character)) ||
-                updatedSentences.some(s => s.selected && s.sentence.includes(kanji.character))
-    }));
-  
-    setKanjis(updatedKanjis);
-  }, [words, kanjis, sentences]);
+      selected:
+        updatedWords.some(
+          (w) => w.selected && w.word.includes(kanji.character)
+        ) ||
+        sentences.some(
+          (s) => s.selected && s.sentence.includes(kanji.character)
+        ),
+    }))
+
+    setKanjis(updatedKanjis)
+  }
+
+  const handleSentenceSelection = (sentence: SelectableSentence) => {
+    setSentences((prev) =>
+      prev.map((s) =>
+        s.id === sentence.id ? { ...s, selected: !s.selected } : s
+      )
+    )
+
+    const updatedSentences = sentences.map((s) =>
+      s.id === sentence.id ? { ...s, selected: !s.selected } : s
+    )
+
+    const updatedKanjis = kanjis.map((kanji) => ({
+      ...kanji,
+      selected:
+        words.some((w) => w.selected && w.word.includes(kanji.character)) ||
+        updatedSentences.some(
+          (s) => s.selected && s.sentence.includes(kanji.character)
+        ),
+    }))
+
+    setKanjis(updatedKanjis)
+  }
 
   function handleToggleSelectedSentence(sentence: SelectableSentence) {
     setSentences((sentences) =>
